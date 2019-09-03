@@ -18,6 +18,7 @@
 #include<fstream>
 #include<signal.h>
 #include<errno.h>
+
 using namespace std;
 void process(int sockfd);
 void NotFound(int sockfd);
@@ -25,6 +26,13 @@ void NotImplement(int sockfd);
 void SendFile(int,string);
 const int MAXLINE=4096;
 char buff[MAXLINE];
+
+void wait_child(int signo)
+{
+	while(waitpid(0,NULL,WNOHANG)>0);
+	return;
+}
+
 int main()
 {
     sockaddr_in clientaddr,serveraddr;
@@ -64,15 +72,24 @@ int main()
         clilen=sizeof(clientaddr);
 		//此处clientaddr返回的是客户端的地址信息，是一个传出参数
         connfd=accept(listenfd,(struct sockaddr*)&clientaddr,&clilen);
-		cout<<"client IP:"<<inet_ntop(AF_INET,&clientaddr.sin_addr.s_addr,client_ip,sizeof(client_ip))<<":"<<clientaddr.sin_port;
+		cout<<"client IP----------->"<<inet_ntop(AF_INET,&clientaddr.sin_addr.s_addr,client_ip,sizeof(client_ip))<<":"<<ntohs(clientaddr.sin_port)<<endl;
         childpid=fork();
-		if(childpid==0)
+		if(childpid<0)
+		{
+			cout<<"fork error";
+			exit(1);
+		}
+		else if(childpid==0)
 		{
 			close(listenfd);
 			process(connfd);
 			exit(0);
 		}
-		close(connfd);
+		else
+		{
+			close(connfd);
+			signal(SIGCHLD,wait_child);
+		}
     }
 
 }
