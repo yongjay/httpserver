@@ -49,6 +49,8 @@ int main()
         return 0;
     }
 
+	int opt=1;
+	setsockopt(listenfd,SOL_SOCKET,SO_REUSEADDR,&opt,sizeof(opt));//加入端口复用
     memset(&serveraddr,0,sizeof(serveraddr));
     serveraddr.sin_family=AF_INET;
     serveraddr.sin_port=htons(40000);
